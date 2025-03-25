@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>电竞桌需求分析</title>
+    <!-- Matrix Rain Effect -->
+    <style>
+        #matrix-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+        .main-container {
+            background: rgba(5, 5, 16, 0.7);
+            backdrop-filter: blur(8px);
+        }
+        /* 赛博朋克背景效果 */
+        #cyberpunk-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            background: 
+                linear-gradient(to bottom right, rgba(5, 5, 16, 0.9), rgba(16, 5, 32, 0.95)),
+                repeating-linear-gradient(45deg, 
+                    rgba(12, 255, 239, 0.1) 0px,
+                    rgba(12, 255, 239, 0.1) 1px,
+                    transparent 1px,
+                    transparent 10px
+                ),
+                repeating-linear-gradient(-45deg,
+                    rgba(255, 0, 255, 0.1) 0px,
+                    rgba(255, 0, 255, 0.1) 1px,
+                    transparent 1px,
+                    transparent 10px
+                );
+        }
+
+        .cyber-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            background: 
+                linear-gradient(90deg, rgba(12, 255, 239, 0.1) 1px, transparent 1px),
+                linear-gradient(rgba(12, 255, 239, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: grid-move 20s linear infinite;
+        }
+
+        .cyber-glow {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .cyber-glow::before,
+        .cyber-glow::after {
+            content: '';
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.3;
+            animation: glow-move 10s ease-in-out infinite alternate;
+        }
+
+        .cyber-glow::before {
+            top: 20%;
+            left: 20%;
+            background: rgba(12, 255, 239, 0.5);
+        }
+
+        .cyber-glow::after {
+            bottom: 20%;
+            right: 20%;
+            background: rgba(255, 0, 255, 0.5);
+            animation-delay: -5s;
+        }
+
+        @keyframes grid-move {
+            0% {
+                transform: perspective(500px) rotateX(60deg) translateY(0);
+            }
+            100% {
+                transform: perspective(500px) rotateX(60deg) translateY(50px);
+            }
+        }
+
+        @keyframes glow-move {
+            0% {
+                transform: translate(0, 0);
+            }
+            100% {
+                transform: translate(50px, 50px);
+            }
+        }
+
+        @keyframes cosmic-pulse {
+            0% { text-shadow: 0 0 5px rgba(12, 255, 239, 0.5), 0 0 10px rgba(255, 0, 255, 0.3); }
+            50% { text-shadow: 0 0 15px rgba(12, 255, 239, 0.8), 0 0 20px rgba(255, 0, 255, 0.6), 0 0 30px rgba(57, 255, 20, 0.4); }
+            100% { text-shadow: 0 0 5px rgba(12, 255, 239, 0.5), 0 0 10px rgba(255, 0, 255, 0.3); }
+        }
+
+        .cosmic-text {
+            background: linear-gradient(90deg, #0cffef, #ff00ff, #39ff14);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: cosmic-pulse 3s ease-in-out infinite;
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 2px;
+            position: relative;
+            display: inline-block;
+        }
+
+        .cosmic-text::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            background: radial-gradient(circle at 50% 50%, rgba(12, 255, 239, 0.1), transparent 70%);
+            z-index: -1;
+            animation: cosmic-glow 4s ease-in-out infinite;
+        }
+
+        @keyframes cosmic-glow {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        /* 导航栏样式 */
+        #main-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 50;
+            transition: background-color 0.3s ease-in-out;
+            backdrop-filter: blur(8px);
+        }
+
+        #main-nav.nav-transparent {
+            background-color: transparent;
+        }
+
+        #main-nav:not(.nav-transparent) {
+            background-color: rgba(5, 5, 16, 0.9);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .main-container {
+            padding-top: 80px;
+        }
+
+        /* 关键数据样式 */
+        .highlight-text {
+            @apply font-bold relative;
+            color: #0cffef;
+            text-shadow: 0 0 5px rgba(12, 255, 239, 0.3);
+            padding: 0 2px;
+            border-bottom: 1px solid rgba(12, 255, 239, 0.3);
+        }
+    </style>
+    <!-- TailwindCSS 3.0+ -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <!-- AOS Animation Library -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    <script>
+        // 配置Tailwind
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        gaming: {
+                            primary: '#0cffef',    // 霓虹蓝
+                            secondary: '#ff00ff',  // 霓虹紫
+                            accent: '#39ff14',     // 霓虹绿
+                            dark: '#0a0a1a',       // 深蓝黑
+                            darker: '#050510',     // 更深的背景色
+                            light: '#2a2a4a'       // 稍亮的深色
+                        }
+                    },
+                    fontFamily: {
+                        cyber: ['"Rajdhani"', 'sans-serif'],
+                        future: ['"Orbitron"', 'sans-serif']
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                        'float': 'float 6s ease-in-out infinite',
+                        'scanline': 'scanline 6s linear infinite',
+                        'grid-flow': 'grid-flow 20s linear infinite',
+                        'data-pulse': 'data-pulse 4s ease-in-out infinite'
+                    },
+                    keyframes: {
+                        glow: {
+                            '0%': { textShadow: '0 0 5px #0cffef, 0 0 10px #0cffef' },
+                            '100%': { textShadow: '0 0 10px #0cffef, 0 0 20px #0cffef, 0 0 30px #0cffef' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' }
+                        },
+                        scanline: {
+                            '0%': { transform: 'translateY(0%)' },
+                            '100%': { transform: 'translateY(100%)' }
+                        },
+                        'grid-flow': {
+                            '0%': { transform: 'translateY(0)' },
+                            '100%': { transform: 'translateY(100%)' }
+                        },
+                        'data-pulse': {
+                            '0%': { boxShadow: '0 0 5px rgba(12, 255, 239, 0.5)' },
+                            '50%': { boxShadow: '0 0 20px rgba(12, 255, 239, 0.8)' },
+                            '100%': { boxShadow: '0 0 5px rgba(12, 255, 239, 0.5)' }
+                        }
+                    }
+                },
+            },
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style type="text/tailwindcss">
+        @layer base {
+            body {
+                @apply bg-gaming-darker text-white font-cyber overflow-x-hidden relative;
+            }
+            body::before {
+                content: '';
+                @apply absolute inset-0 bg-[linear-gradient(rgba(12,255,239,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(12,255,239,0.03)_1px,transparent_1px)] bg-[size:30px_30px] pointer-events-none z-0;
+            }
+            body::after {
+                content: '';
+                @apply absolute top-0 left-0 w-full h-screen pointer-events-none opacity-10 z-10;
+                background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.15) 1px, transparent 1px, transparent 2px);
+            }
+            .scanline {
+                @apply absolute top-0 left-0 w-full h-[10px] bg-gaming-primary opacity-10 z-20 animate-scanline pointer-events-none;
+            }
+            .grid-bg {
+                @apply absolute inset-0 z-0 opacity-20 pointer-events-none overflow-hidden;
+                background-size: 40px 40px;
+                background-image: 
+                    linear-gradient(to right, rgba(12, 255, 239, 0.1) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(12, 255, 239, 0.1) 1px, transparent 1px);
+            }
+            .grid-bg::before {
+                content: '';
+                @apply absolute top-0 left-0 w-[200%] h-[200%] animate-grid-flow;
+                background-size: 40px 40px;
+                background-image: 
+                    radial-gradient(circle, rgba(12, 255, 239, 0.1) 1px, transparent 1px);
+            }
+            h1, h2, h3, h4, h5, h6 {
+                @apply font-future font-bold;
+            }
+            .progress-bar {
+                @apply h-2 bg-gaming-dark overflow-hidden relative rounded-full;
+            }
+            .progress-bar-fill {
+                @apply absolute top-0 left-0 h-full rounded-full;
+                background: linear-gradient(90deg, #0cffef, #39ff14);
+                box-shadow: 0 0 10px rgba(12, 255, 239, 0.7);
+            }
+            ::-webkit-scrollbar {
+                @apply w-2;
+            }
+            ::-webkit-scrollbar-track {
+                @apply bg-gaming-dark;
+            }
+            ::-webkit-scrollbar-thumb {
+                @apply bg-gaming-primary/50 rounded-full;
+                box-shadow: inset 0 0 6px rgba(12, 255, 239, 0.5);
+            }
+            ::-webkit-scrollbar-thumb:hover {
+                @apply bg-gaming-primary;
+            }
+            .main-container {
+                @apply container mx-auto px-4 py-8 min-h-screen flex flex-col;
+                padding-top: 6rem;
+            }
+            .nav-fixed {
+                @apply fixed top-0 left-0 right-0 z-50 bg-gaming-darker/90 backdrop-blur-md shadow-lg;
+                transform: translateY(0);
+                transition: all 0.3s ease-in-out;
+            }
+            .nav-hidden {
+                transform: translateY(-100%);
+            }
+        }
+        @layer components {
+            .neon-border {
+                @apply relative border border-gaming-primary rounded-md overflow-hidden;
+                box-shadow: 0 0 5px rgba(12, 255, 239, 0.5), inset 0 0 5px rgba(12, 255, 239, 0.5);
+            }
+            .neon-border::before {
+                content: '';
+                @apply absolute inset-0 opacity-30;
+                background: linear-gradient(90deg, transparent, rgba(12, 255, 239, 0.6), transparent);
+            }
+            .neon-text {
+                @apply text-gaming-primary;
+            }
+            .neon-purple {
+                @apply text-gaming-secondary;
+                text-shadow: 0 0 5px rgba(255, 0, 255, 0.7), 0 0 10px rgba(255, 0, 255, 0.5);
+            }
+            .neon-green {
+                @apply text-gaming-accent;
+                text-shadow: 0 0 5px rgba(57, 255, 20, 0.7), 0 0 10px rgba(57, 255, 20, 0.5);
+            }
+            .cyber-btn {
+                @apply px-6 py-2 bg-gaming-dark border border-gaming-primary text-gaming-primary font-future uppercase tracking-wider relative overflow-hidden transition-all duration-300 hover:bg-gaming-primary hover:text-gaming-dark hover:shadow-[0_0_15px_rgba(12,255,239,0.5)];
+            }
+            .cyber-btn::before {
+                content: '';
+                @apply absolute top-0 left-[-100%] w-full h-full bg-white opacity-20;
+                transition: transform 0.3s ease;
+            }
+            .cyber-btn:hover::before {
+                transform: translateX(100%);
+            }
+            .cyber-card {
+                @apply bg-gaming-dark/80 backdrop-blur-sm border border-gaming-primary/30 rounded-lg p-8 transition-all duration-500 relative overflow-hidden;
+            }
+            .cyber-card:hover {
+                @apply border-gaming-secondary/60;
+                box-shadow: 
+                    0 0 20px rgba(255, 0, 255, 0.2),
+                    inset 0 0 20px rgba(255, 0, 255, 0.1);
+                transform: translateY(-2px);
+            }
+            .cyber-card::after {
+                content: '';
+                @apply absolute inset-0;
+                background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), 
+                    rgba(255, 0, 255, 0.1) 0%,
+                    transparent 50%);
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            }
+            .cyber-card:hover::after {
+                opacity: 1;
+            }
+
+            .feature-card {
+                @apply bg-gaming-dark/80 backdrop-blur-sm border border-gaming-primary/30 rounded-lg p-8 transition-all duration-500 relative overflow-hidden;
+            }
+            /* 动画层 */
+            .feature-card-animation {
+                @apply absolute inset-0 overflow-hidden pointer-events-none;
+                background: transparent;
+                z-index: 1;
+            }
+            .feature-card-animation::before {
+                content: '';
+                @apply absolute inset-0;
+                background: linear-gradient(90deg, 
+                    transparent, 
+                    rgba(255, 0, 255, 0.1), 
+                    rgba(12, 255, 239, 0.2), 
+                    rgba(255, 0, 255, 0.1), 
+                    transparent);
+                transform: translateX(-100%);
+                animation: feature-shine 6s ease-in-out infinite;
+            }
+
+            @keyframes feature-shine {
+                0% {
+                    transform: translateX(-100%) skewX(-15deg);
+                    opacity: 0;
+                }
+                10% {
+                    opacity: 0.5;
+                }
+                90% {
+                    opacity: 0.5;
+                }
+                100% {
+                    transform: translateX(100%) skewX(-15deg);
+                    opacity: 0;
+                }
+            }
+
+            /* 内容层 */
+            .feature-card-content {
+                @apply relative z-10;
+                background: transparent;
+            }
+
+            .feature-icon-wrapper {
+                @apply w-16 h-16 mb-6 relative;
+            }
+            
+            .feature-icon {
+                @apply w-16 h-16 flex items-center justify-center text-2xl rounded-full relative;
+                background: transparent;
+            }
+
+            /* 基础功能图标样式 */
+            .feature-icon i.text-gaming-accent {
+                color: #39ff14;
+                text-shadow: 
+                    0 0 10px #39ff14,
+                    0 0 20px #39ff14,
+                    0 0 30px #39ff14;
+                @apply relative z-10;
+            }
+
+            /* 进阶功能图标样式 */
+            .feature-icon i.text-gaming-primary {
+                color: #0cffef;
+                text-shadow: 
+                    0 0 10px #0cffef,
+                    0 0 20px #0cffef,
+                    0 0 30px #0cffef;
+                @apply relative z-10;
+            }
+
+            /* 高级功能图标样式 */
+            .feature-icon i.text-gaming-secondary {
+                color: #ff00ff;
+                text-shadow: 
+                    0 0 10px #ff00ff,
+                    0 0 20px #ff00ff,
+                    0 0 30px #ff00ff;
+                @apply relative z-10;
+            }
+
+            .feature-icon-glow {
+                @apply absolute inset-0 rounded-full;
+                animation: icon-pulse 3s ease-in-out infinite;
+                z-index: 1;
+            }
+
+            .feature-icon i.text-gaming-accent + .feature-icon-glow {
+                box-shadow: 
+                    0 0 15px rgba(57, 255, 20, 0.5),
+                    inset 0 0 10px rgba(57, 255, 20, 0.3);
+                background: radial-gradient(circle at center,
+                    rgba(57, 255, 20, 0.2) 0%,
+                    transparent 70%);
+            }
+
+            .feature-icon i.text-gaming-primary + .feature-icon-glow {
+                box-shadow: 
+                    0 0 15px rgba(12, 255, 239, 0.5),
+                    inset 0 0 10px rgba(12, 255, 239, 0.3);
+                background: radial-gradient(circle at center,
+                    rgba(12, 255, 239, 0.2) 0%,
+                    transparent 70%);
+            }
+
+            .feature-icon i.text-gaming-secondary + .feature-icon-glow {
+                box-shadow: 
+                    0 0 15px rgba(255, 0, 255, 0.5),
+                    inset 0 0 10px rgba(255, 0, 255, 0.3);
+                background: radial-gradient(circle at center,
+                    rgba(255, 0, 255, 0.2) 0%,
+                    transparent 70%);
+            }
+
+            @keyframes icon-pulse {
+                0% { opacity: 0.5; }
+                50% { opacity: 1; }
+                100% { opacity: 0.5; }
+            }
+
+            .tag {
+                @apply text-xs font-medium px-2.5 py-0.5 rounded-full inline-flex items-center mr-2 mb-2 border;
+            }
+            .tag-easy {
+                @apply border-gaming-accent/50 text-gaming-accent;
+                box-shadow: 0 0 5px rgba(57, 255, 20, 0.3);
+            }
+            .tag-medium {
+                @apply border-gaming-primary/50 text-gaming-primary;
+                box-shadow: 0 0 5px rgba(12, 255, 239, 0.3);
+            }
+            .tag-hard {
+                @apply border-gaming-secondary/50 text-gaming-secondary;
+                box-shadow: 0 0 5px rgba(255, 0, 255, 0.3);
+            }
+            .tag-attractive {
+                @apply border-white/50 text-white;
+                box-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+            }
+            
+            .nav-wrapper {
+                @apply fixed top-0 left-0 right-0 z-50;
+            }
+            
+            .nav-content {
+                @apply flex justify-between items-center py-4 px-4 w-full transition-all duration-300;
+                transform: translateY(0);
+            }
+            
+            .nav-fixed {
+                @apply bg-gaming-darker/90 backdrop-blur-md shadow-lg;
+            }
+            
+            .nav-hidden {
+                transform: translateY(-100%);
+            }
+        }
+        .header-section {
+            @apply mb-16 pt-8 text-center;
+        }
+        .content-section {
+            @apply grid gap-8 mb-16;
+        }
+        .footer-section {
+            @apply mt-auto py-8 border-t border-gaming-primary/30;
+        }
+        .section-title {
+            @apply text-3xl font-bold mb-6 pb-2 border-b border-gaming-primary/30 inline-block relative;
+        }
+        .section-title::after {
+            content: '';
+            @apply block absolute bottom-0 left-0 w-full h-[2px] bg-gaming-primary;
+            box-shadow: 0 0 10px rgba(12, 255, 239, 0.7);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div id="cyberpunk-bg"></div>
+    <div class="cyber-grid"></div>
+    <div class="cyber-glow"></div>
+    <div class="scanline"></div>
+    
+    <main class="main-container relative z-10">
+        <header class="header-section">
+            <nav id="main-nav" class="nav-transparent">
+                <div class="flex justify-between items-center py-4 px-4 w-full">
+                    <div class="text-xl font-future tracking-wider text-gaming-primary">
+                        <span class="animate-pulse">GAMING</span><span class="text-white">DESK</span>
+                    </div>
+                    <div class="hidden md:flex space-x-4">
+                        <a href="#intro" class="cyber-btn text-sm py-1">引言</a>
+                        <a href="#market" class="cyber-btn text-sm py-1">市场调研</a>
+                        <a href="#needs" class="cyber-btn text-sm py-1">需求分层</a>
+                        <a href="#features" class="cyber-btn text-sm py-1">功能探索</a>
+                        <a href="#roi" class="cyber-btn text-sm py-1">经济效益</a>
+                    </div>
+                    <div class="md:hidden">
+                        <button id="mobile-menu-btn" class="cyber-btn text-sm py-1">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                    </div>
+                </div>
+            </nav>
+            
+            <div class="text-center mb-16" data-aos="fade-down">
+                <h1 class="text-5xl md:text-6xl font-bold mb-4 neon-text tracking-wider">电竞桌需求分析</h1>
+                <p class="text-xl text-gaming-primary/80 max-w-3xl mx-auto">打造更满足电竞爱好者需求的产品</p>
+                <div class="mt-8">
+                    <button class="cyber-btn inline-block animate-pulse-slow" onclick="document.getElementById('intro').scrollIntoView({behavior: 'smooth'})">
+                        探索电竞新境界
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <section class="content-section">
+            <!-- 引言部分 -->
+            <section id="intro" class="mb-24" data-aos="fade-up">
+                <h2 class="section-title neon-text relative">引言</h2>
+                <div class="cyber-card" data-aos="fade-up" data-aos-delay="100">
+                    <div class="feature-card-animation"></div>
+                    <div class="feature-card-content p-6">
+                        <div class="space-y-4 text-gray-300 leading-relaxed">
+                            <p>根据团队整理的销售数据，2024年，公司HomeOffice品类实现了超过<span class="highlight-text">1亿元</span>人民币的销售额，但利润率仅为<span class="highlight-text">2%</span>，这表明尽管销售规模庞大，但盈利能力相对有限。目前，该品类下所有产品的平均售价约为<span class="highlight-text">110美元</span>。这种低价策略虽然有助于扩大市场份额，但也限制了产品功能的提升，导致在激烈的市场竞争中缺乏差异化优势。为了突破这一瓶颈，提升产品功能和质量，满足消费者的进阶需求，已成为提高利润率和市场竞争力的关键。</p>
+                            <p>通过逐步增加产品功能和成本，我们不仅可以提升产品的附加值，还能为未来高端产品的研发积累宝贵经验。这将有助于我们在市场中建立独特的竞争优势，吸引更广泛的消费者群体，最终实现销售额和利润率的双重提升。</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 市场调研结果 -->
+            <section id="market" class="mb-24" data-aos="fade-up">
+                <h2 class="section-title neon-text relative">市场调研结果</h2>
+                <div class="cyber-card mb-8" data-aos="fade-up" data-aos-delay="100">
+                    <div class="feature-card-animation"></div>
+                    <div class="feature-card-content">
+                        <div class="space-y-4">
+                            <p>随着跨境电商行业竞争加剧，公司目前主打的100美元价位电竞桌产品利润空间被不断压缩。根据我多年的电竞行业经验和调研结果，建议采取渐进式产品升级策略：</p>
+                            <ul class="space-y-3 mt-4">
+                                <li class="flex items-start">
+                                    <span class="w-2 h-2 bg-gaming-accent rounded-full mr-2 mt-2"></span>
+                                    <span>短期目标：将部分产品线提升至170美元左右，通过增加实用功能和提升用户体验来获得更好的利润空间</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="w-2 h-2 bg-gaming-primary rounded-full mr-2 mt-2"></span>
+                                    <span>中期目标：基于市场反馈和研发经验，逐步开发200-250美元的进阶产品，满足用户对更多功能的需求</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="w-2 h-2 bg-gaming-secondary rounded-full mr-2 mt-2"></span>
+                                    <span>长期目标：积累足够的技术和市场经验后，开发300美元以上的高端产品，打造品牌溢价能力</span>
+                                </li>
+                            </ul>
+                            <p class="mt-4">这种渐进式策略可以：</p>
+                            <ul class="space-y-3 mt-2">
+                                <li class="flex items-start">
+                                    <span class="w-2 h-2 bg-gaming-accent rounded-full mr-2 mt-2"></span>
+                                    <span>降低研发和市场风险，通过市场反馈逐步完善产品</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="w-2 h-2 bg-gaming-accent rounded-full mr-2 mt-2"></span>
+                                    <span>培养用户对更高端产品的认知和接受度</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="w-2 h-2 bg-gaming-accent rounded-full mr-2 mt-2"></span>
+                                    <span>逐步建立品牌形象，为未来高端市场布局打下基础</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- 产品市场定位矩阵卡片 -->
+                    <div class="cyber-card" data-aos="fade-up" data-aos-delay="100">
+                        <div class="feature-card-animation"></div>
+                        <div class="feature-card-content">
+                            <h3 class="text-lg font-semibold mb-4 neon-text">产品市场定位矩阵</h3>
+                            <!-- 产品定位矩阵 -->
+                            <div class="relative h-72 neon-border p-6">
+                                <!-- 坐标轴 -->
+                                <div class="absolute w-full h-[2px] bg-gaming-dark/50 top-1/2 left-0"></div>
+                                <div class="absolute h-full w-[2px] bg-gaming-dark/50 left-1/2 top-0"></div>
+                                
+                                <!-- 坐标轴标签 -->
+                                <div class="absolute left-2 top-1/2 transform -translate-y-8 text-xs text-gray-400">利润低</div>
+                                <div class="absolute right-2 top-1/2 transform -translate-y-8 text-xs text-gray-400">利润高</div>
+                                <div class="absolute left-1/2 bottom-2 transform -translate-x-8 text-xs text-gray-400">竞争激烈</div>
+                                <div class="absolute left-1/2 top-2 transform -translate-x-8 text-xs text-gray-400">市场蓝海</div>
+
+                                <!-- 基础款产品位置 -->
+                                <div class="absolute left-[30%] top-[70%] -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-gaming-dark border border-gaming-accent flex items-center justify-center">
+                                    <span class="text-gaming-accent text-xs text-center">基础款产品</span>
+                                </div>
+
+                                <!-- 中端产品位置 -->
+                                <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-gaming-dark border border-gaming-primary flex items-center justify-center">
+                                    <span class="text-gaming-primary text-xs text-center">中端</span>
+                                </div>
+
+                                <!-- 目标定位 -->
+                                <div class="absolute left-[70%] top-[30%] -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-gaming-dark border-2 border-dashed border-gaming-secondary flex items-center justify-center">
+                                    <span class="text-gaming-secondary text-xs text-center">目标定位</span>
+                                </div>
+
+                                <!-- 升级路径线条 -->
+                                <svg class="absolute inset-0 w-full h-full" style="z-index: -1;">
+                                    <!-- 定义箭头 -->
+                                    <defs>
+                                        <marker id="arrow" markerWidth="6" markerHeight="4" refX="6" refY="2" orient="auto">
+                                            <polygon points="0 0, 6 2, 0 4" fill="#ff00ff" />
+                                        </marker>
+                                        <linearGradient id="three-color-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                            <stop offset="0%" style="stop-color:#39ff14" />
+                                            <stop offset="50%" style="stop-color:#0cffef" />
+                                            <stop offset="100%" style="stop-color:#ff00ff" />
+                                        </linearGradient>
+                                    </defs>
+                                    
+                                    <!-- 单个贯穿的箭头线，只显示中间部分 -->
+                                    <line x1="40%" y1="60%" x2="60%" y2="40%" 
+                                          stroke="url(#three-color-gradient)" 
+                                          stroke-width="1.5"
+                                          stroke-dasharray="3"
+                                          marker-end="url(#arrow)" />
+                                </svg>
+                            </div>
+                            <div class="mt-4 text-sm text-gray-300">
+                                <p>建议采用渐进式升级策略，通过中端市场的过渡，逐步向高端市场迈进。这种策略可以降低风险，积累经验和品牌认知。</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 竞争分析图卡片 -->
+                    <div class="cyber-card" data-aos="fade-up" data-aos-delay="200">
+                        <div class="feature-card-animation"></div>
+                        <div class="feature-card-content">
+                            <h3 class="text-lg font-semibold mb-4 neon-text">市场竞争格局</h3>
+                            <div class="relative h-72 neon-border p-6">
+                                <div class="grid grid-cols-2 grid-rows-2 gap-4 h-full">
+                                    <!-- 四个象限 -->
+                                    <div class="border-r border-b border-gaming-primary/30 p-4 relative">
+                                        <h4 class="text-sm font-semibold text-gaming-accent">基础市场</h4>
+                                        <p class="text-xs text-gray-400">竞争激烈、低利润</p>
+                                        <div class="mt-2 flex flex-wrap gap-2">
+                                            <span class="px-2 py-1 bg-gaming-dark/50 text-xs rounded-full">Huuger</span>
+                                            <span class="px-2 py-1 bg-gaming-dark/50 text-xs rounded-full">FEZIBO</span>
+                                            <span class="px-2 py-1 bg-gaming-dark/80 text-xs rounded-full border border-gaming-accent">我司</span>
+                                        </div>
+                                    </div>
+                                    <div class="border-b border-gaming-primary/30 p-4 relative">
+                                        <h4 class="text-sm font-semibold text-gaming-primary">中端市场</h4>
+                                        <p class="text-xs text-gray-400">进阶功能、中等利润</p>
+                                        <div class="mt-2 flex flex-wrap gap-2">
+                                            <span class="px-2 py-1 bg-gaming-dark/50 text-xs rounded-full">SEDETA</span>
+                                            <span class="px-2 py-1 bg-gaming-dark/50 text-xs rounded-full">AODK</span>
+                                        </div>
+                                    </div>
+                                    <div class="border-r border-gaming-primary/30 p-4 relative">
+                                        <h4 class="text-sm font-semibold text-gray-300">低端市场</h4>
+                                        <p class="text-xs text-gray-400">价格便宜，质量差</p>
+                                        <div class="mt-2 flex flex-wrap gap-2">
+                                        </div>
+                                    </div>
+                                    <div class="p-4 relative">
+                                        <h4 class="text-sm font-semibold text-gaming-secondary">高端市场</h4>
+                                        <p class="text-xs text-gray-400">高性能、高利润</p>
+                                        <div class="mt-2 flex flex-wrap gap-2">
+                                            <span class="px-2 py-1 bg-gaming-dark/50 text-xs rounded-full">SecretLab</span>
+                                            <span class="px-2 py-1 bg-gaming-dark/80 text-xs rounded-full border border-dashed border-gaming-secondary">目标定位</span>
+                                        </div>
+                                        <div class="absolute bottom-2 right-2">
+                                            <span class="text-xs text-gaming-secondary animate-pulse">市场空白区</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 坐标轴标签 -->
+                                <div class="absolute left-1/2 bottom-0 transform -translate-x-1/2 text-xs text-gray-400">价格定位</div>
+                                <div class="absolute left-0 top-1/2 transform -translate-y-1/2 rotate-90 text-xs text-gray-400">功能差异化</div>
+                            </div>
+                            <div class="mt-4 text-sm text-gray-300">
+                                <p>通过逐步提升产品定位，我们可以在保持现有市场份额的同时，探索更高利润的市场机会。这种渐进式策略能够降低风险，同时积累宝贵的研发和市场经验。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 需求分层分析 -->
+            <section id="needs" class="mb-24" data-aos="fade-up">
+                <h2 class="section-title neon-text relative">需求分层分析</h2>
+                <!-- 基础需求卡片 -->
+                <div class="cyber-card mb-8" data-aos="fade-up" data-aos-delay="100">
+                    <div class="feature-card-animation"></div>
+                    <div class="feature-card-content">
+                        <h3 class="text-xl font-bold mb-4 neon-text">基础需求 - 保障"能用"</h3>
+                        <p class="mb-6">这些是电竞桌的基本功能，目标是解决设备放置和基本稳定性问题，目前市场上大多数产品已经具备，但我们可以在细节上做得更好：</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- 尺寸与稳定性优化 -->
+                            <div class="feature-card">
+                                <div class="feature-card-animation"></div>
+                                <div class="feature-card-content">
+                                    <div class="feature-icon-wrapper">
+                                        <div class="feature-icon">
+                                            <i class="fas fa-ruler text-gaming-accent"></i>
+                                            <div class="feature-icon-glow"></div>
+                                        </div>
+                                    </div>
+                                    <h4 class="text-lg font-bold mb-2">尺寸与稳定性优化</h4>
+                                    <p class="text-gray-300">电竞桌基础尺寸优化，增加桌面厚度和支撑结构，提供更高承重能力。常规电竞桌承重80-100kg，高端桌可达150kg以上，满足多显示器和设备需求。</p>
+                                    <div class="mt-4">
+                                        <span class="tag tag-easy">实施难度: 低</span>
+                                        <span class="tag tag-medium">用户吸引力: 中</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 防潮防水设计 -->
+                            <div class="feature-card">
+                                <div class="feature-card-animation"></div>
+                                <div class="feature-card-content">
+                                    <div class="feature-icon-wrapper">
+                                        <div class="feature-icon">
+                                            <i class="fas fa-tint-slash text-gaming-accent"></i>
+                                            <div class="feature-icon-glow"></div>
+                                        </div>
+                                    </div>
+                                    <h4 class="text-lg font-bold mb-2">防潮防水设计</h4>
+                                    <p class="text-gray-300">电竞环境中饮料频繁出现，基础防潮防水设计可保护用户设备安全。通过桌面材质和涂层升级，可实现基础防水防潮功能。</p>
+                                    <div class="mt-4">
+                                        <span class="tag tag-easy">实施难度: 低</span>
+                                        <span class="tag tag-medium">用户吸引力: 中</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 简易收纳功能 -->
+                            <div class="feature-card">
+                                <div class="feature-card-animation"></div>
+                                <div class="feature-card-content">
+                                    <div class="feature-icon-wrapper">
+                                        <div class="feature-icon">
+                                            <i class="fas fa-box-open text-gaming-accent"></i>
+                                            <div class="feature-icon-glow"></div>
+                                        </div>
+                                    </div>
+                                    <h4 class="text-lg font-bold mb-2">简易收纳功能</h4>
+                                    <p class="text-gray-300">基础抽屉和挂钩设计，解决电竞玩家耳机、手柄等外设收纳问题。简单但实用的收纳功能是基础需求的重要组成部分。</p>
+                                    <div class="mt-4">
+                                        <span class="tag tag-easy">实施难度: 低</span>
+                                        <span class="tag tag-medium">用户吸引力: 中</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 组装便捷性 -->
+                            <div class="feature-card">
+                                <div class="feature-card-animation"></div>
+                                <div class="feature-card-content">
+                                    <div class="feature-icon-wrapper">
+                                        <div class="feature-icon">
+                                            <i class="fas fa-tools text-gaming-accent"></i>
+                                            <div class="feature-icon-glow"></div>
+                                        </div>
+                                    </div>
+                                    <h4 class="text-lg font-bold mb-2">组装便捷性</h4>
+                                    <p class="text-gray-300">针对跨境物流特点，优化产品结构和连接件设计，降低用户组装难度。简化组装步骤，提供清晰说明书和视频指导。</p>
+                                    <div class="mt-4">
+                                        <span class="tag tag-easy">实施难度: 低</span>
+                                        <span class="tag tag-easy">用户吸引力: 低</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 进阶需求卡片 -->
+                <div class="cyber-card mb-8" data-aos="fade-up" data-aos-delay="200">
+                    <div class="feature-card-animation"></div>
+                    <div class="feature-card-content">
+                        <h3 class="text-xl font-bold mb-4 neon-text">进阶需求 - 追求"好用"</h3>
+                        <p class="mb-6">这一层次的需求关注用户体验的提升，让产品不仅能用，而且好用，能够明显改善用户的使用体验：</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- 智能化功能 -->
+                            <div class="feature-card">
+                                <div class="feature-card-animation"></div>
+                                <div class="feature-card-content">
+                                    <div class="feature-icon-wrapper">
+                                        <div class="feature-icon">
+                                            <i class="fas fa-microchip text-gaming-primary"></i>
+                                            <div class="feature-icon-glow"></div>
+                                        </div>
+                                    </div>
+                                    <h4 class="text-lg font-bold mb-2">智能化功能</h4>
+                                    <p class="text-gray-300">集成USB充电端口、无线充电功能、简单的桌面控制系统，提供基础的"轻智能"体验。智能控制可调节灯光效果，实现简单的场景切换。</p>
+                                    <div class="mt-4">
+                                        <span class="tag tag-medium">实施难度: 中</span>
+                                        <span class="tag tag-medium">用户吸引力: 中</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 升级材质 -->
+                            <div class="feature-card">
+                                <div class="feature-card-animation"></div>
+                                <div class="feature-card-content">
+                                    <div class="feature-icon-wrapper">
+                                        <div class="feature-icon">
+                                            <i class="fas fa-layer-group text-gaming-primary"></i>
+                                            <div class="feature-icon-glow"></div>
+                                        </div>
+                                    </div>
+                                    <h4 class="text-lg font-bold mb-2">升级材质</h4>
+                                    <p class="text-gray-300">高密度纤维板、碳素纤维板或超纤皮革表面，提供更出色的使用体验。材质升级可提供更好的手感、耐用性和视觉效果，增强产品档次感。</p>
+                                    <div class="mt-4">
+                                        <span class="tag tag-medium">实施难度: 中</span>
+                                        <span class="tag tag-medium">用户吸引力: 中</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 深度收纳系统 -->
+                            <div class="feature-card">
+                                <div class="feature-card-animation"></div>
+                                <div class="feature-card-content">
+                                    <div class="feature-icon-wrapper">
+                                        <div class="feature-icon">
+                                            <i class="fas fa-cube text-gaming-primary"></i>
+                                            <div class="feature-icon-glow"></div>
+                                        </div>
+                                    </div>
+                                    <h4 class="text-lg font-bold mb-2">深度收纳系统</h4>
+                                    <p class="text-gray-300">模块化收纳系统，可根据用户需求自由组合。包括可拆卸的耳机架、手柄支架、主机托架等，满足不同用户的个性化收纳需求。</p>
+                                    <div class="mt-4">
+                                        <span class="tag tag-medium">实施难度: 中</span>
+                                        <span class="tag tag-hard">用户吸引力: 高</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 电缆管理系统 -->
+                            <div class="feature-card">
+                                <div class="feature-card-animation"></div>
+                                <div class="feature-card-content">
+                                    <div class="feature-icon-wrapper">
+                                        <div class="feature-icon">
+                                            <i class="fas fa-plug text-gaming-primary"></i>
+                                            <div class="feature-icon-glow"></div>
+                                        </div>
+                                    </div>
+                                    <h4 class="text-lg font-bold mb-2">电缆管理系统</h4>
+                                    <p class="text-gray-300">一体化走线槽、磁吸理线夹、桌面过线孔等设计，解决电竞场景下的线缆杂乱问题。有效的线缆管理可使桌面更整洁，提升整体使用体验。</p>
+                                    <div class="mt-4">
+                                        <span class="tag tag-medium">实施难度: 中</span>
+                                        <span class="tag tag-hard">用户吸引力: 高</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 高级需求卡片 -->
+                <div class="cyber-card mb-8" data-aos="fade-up" data-aos-delay="300">
+                    <div class="feature-card-animation"></div>
+                    <div class="feature-card-content">
+                        <h3 class="text-xl font-bold mb-8 neon-purple">高级需求 - 实现"专用"</h3>
+                        <p class="mb-8 text-lg">这是最高层次的需求，针对特定用户群体的场景化需求，让产品不仅好用，而且能够针对特定场景提供专业级解决方案：</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <!-- 电竞比赛场景 -->
+                            <div class="feature-card">
+                                <div class="feature-card-animation"></div>
+                                <div class="feature-card-content">
+                                    <div class="feature-icon-wrapper">
+                                        <div class="feature-icon">
+                                            <i class="fas fa-trophy text-gaming-secondary"></i>
+                                            <div class="feature-icon-glow"></div>
+                                        </div>
+                                    </div>
+                                    <h4 class="text-xl font-bold mb-4">电竞比赛场景</h4>
+                                    <p class="text-gray-300 mb-6">为职业电竞选手设计，专业防抖结构、精准高度调节、专业赛事级隔音材质，以及团队同步灯光系统。满足高强度比赛环境下的专业需求。</p>
+                                    <div class="mt-4">
+                                        <span class="tag tag-hard">实施难度: 高</span>
+                                        <span class="tag tag-hard">客户吸引力: 高</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 主播直播场景 -->
+                            <div class="feature-card">
+                                <div class="feature-card-animation"></div>
+                                <div class="feature-card-content">
+                                    <div class="feature-icon-wrapper">
+                                        <div class="feature-icon">
+                                            <i class="fas fa-video text-gaming-secondary"></i>
+                                            <div class="feature-icon-glow"></div>
+                                        </div>
+                                    </div>
+                                    <h4 class="text-xl font-bold mb-4">主播直播场景</h4>
+                                    <p class="text-gray-300 mb-6">集成式摄像头/灯光支架，便捷的直播控制面板，可编程的场景切换功能。针对游戏主播的专业直播工作站，提升直播效率和视觉效果。</p>
+                                    <div class="mt-4">
+                                        <span class="tag tag-hard">实施难度: 高</span>
+                                        <span class="tag tag-hard">客户吸引力: 高</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 多设备办公场景 -->
+                            <div class="feature-card">
+                                <div class="feature-card-animation"></div>
+                                <div class="feature-card-content">
+                                    <div class="feature-icon-wrapper">
+                                        <div class="feature-icon">
+                                            <i class="fas fa-laptop-code text-gaming-secondary"></i>
+                                            <div class="feature-icon-glow"></div>
+                                        </div>
+                                    </div>
+                                    <h4 class="text-xl font-bold mb-4">多设备办公场景</h4>
+                                    <p class="text-gray-300 mb-6">针对兼具游戏和工作的用户，提供快速切换多设备的接口、可变形工作区域，以及高效的电源管理系统。满足"游戏+办公"的复合场景需求。</p>
+                                    <div class="mt-4">
+                                        <span class="tag tag-hard">实施难度: 高</span>
+                                        <span class="tag tag-medium">客户吸引力: 中</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 程序开发场景 -->
+                            <div class="feature-card">
+                                <div class="feature-card-animation"></div>
+                                <div class="feature-card-content">
+                                    <div class="feature-icon-wrapper">
+                                        <div class="feature-icon">
+                                            <i class="fas fa-code text-gaming-secondary"></i>
+                                            <div class="feature-icon-glow"></div>
+                                        </div>
+                                    </div>
+                                    <h4 class="text-xl font-bold mb-4">程序开发场景</h4>
+                                    <p class="text-gray-300 mb-6">针对程序开发者设计，支持多显示器和开发设备的布局优化，高强度长时间工作的人体工学支持，以及设备协同系统。</p>
+                                    <div class="mt-4">
+                                        <span class="tag tag-hard">实施难度: 高</span>
+                                        <span class="tag tag-medium">客户吸引力: 中</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 进阶功能探索方向 -->
+            <section id="features" class="mb-24" data-aos="fade-up">
+                <h2 class="section-title neon-text relative">进阶功能探索方向</h2>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- 线缆管理系统卡片 -->
+                    <div class="cyber-card" data-aos="fade-up" data-aos-delay="100">
+                        <div class="flex items-start p-6">
+                            <div class="flex-grow">
+                                <h3 class="text-xl font-semibold mb-4 text-gaming-primary">线缆管理系统</h3>
+                                <div class="feature-icon-wrapper">
+                                    <div class="feature-icon">
+                                        <i class="fas fa-network-wired text-gaming-accent"></i>
+                                        <div class="feature-icon-glow"></div>
+                                    </div>
+                                </div>
+                                <p class="text-gray-300 mb-4">电竞场景下的多设备连接导致线缆杂乱，是用户体验的主要痛点之一。</p>
+                                <ul class="space-y-3">
+                                    <li class="flex items-center">
+                                        <span class="w-2 h-2 bg-gaming-accent rounded-full mr-2"></span>
+                                        <span class="text-gray-300">增加插线板盒，隐藏杂乱线缆和插排，提升桌面整洁度</span>
+                                    </li>
+                                    <li class="flex items-center">
+                                        <span class="w-2 h-2 bg-gaming-accent rounded-full mr-2"></span>
+                                        <span class="text-gray-300">理线器：集中管理线缆，防止缠绕或凌乱</span>
+                                    </li>
+                                    <li class="flex items-center">
+                                        <span class="w-2 h-2 bg-gaming-accent rounded-full mr-2"></span>
+                                        <span class="text-gray-300">桌面开孔/刘海槽：便利走线，避免桌面无法贴墙</span>
+                                    </li>
+                                </ul>
+                                <div class="mt-4 flex gap-3">
+                                    <span class="tag tag-easy">实施难度: 低</span>
+                                    <span class="tag tag-hard">客户吸引力: 高</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 升级RGB灯带卡片 -->
+                    <div class="cyber-card" data-aos="fade-up" data-aos-delay="200">
+                        <div class="flex items-start p-6">
+                            <div class="flex-grow">
+                                <h3 class="text-xl font-semibold mb-4 text-gaming-primary">升级RGB灯带</h3>
+                                <div class="feature-icon-wrapper">
+                                    <div class="feature-icon">
+                                        <i class="fas fa-lightbulb text-gaming-accent"></i>
+                                        <div class="feature-icon-glow"></div>
+                                    </div>
+                                </div>
+                                <p class="text-gray-300 mb-4">灯光效果是电竞产品的标志性元素，升级的RGB系统可显著提升产品吸引力。</p>
+                                <ul class="space-y-3">
+                                    <li class="flex items-center">
+                                        <span class="w-2 h-2 bg-gaming-accent rounded-full mr-2"></span>
+                                        <span class="text-gray-300">边缘开槽预埋式设计，提供柔和均匀的光照效果</span>
+                                    </li>
+                                    <li class="flex items-center">
+                                        <span class="w-2 h-2 bg-gaming-accent rounded-full mr-2"></span>
+                                        <span class="text-gray-300">可编程灯效控制系统，支持多种灯光模式和游戏同步</span>
+                                    </li>
+                                    <li class="flex items-center">
+                                        <span class="w-2 h-2 bg-gaming-accent rounded-full mr-2"></span>
+                                        <span class="text-gray-300">集成式控制面板，便捷调节亮度和效果</span>
+                                    </li>
+                                </ul>
+                                <div class="mt-4 flex gap-3">
+                                    <span class="tag tag-medium">实施难度: 中</span>
+                                    <span class="tag tag-hard">客户吸引力: 高</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 桌面材质和边缘处理升级卡片 -->
+                    <div class="cyber-card" data-aos="fade-up" data-aos-delay="300">
+                        <div class="flex items-start p-6">
+                            <div class="flex-grow">
+                                <h3 class="text-xl font-semibold mb-4 text-gaming-primary">桌面材质和边缘处理升级</h3>
+                                <div class="feature-icon-wrapper">
+                                    <div class="feature-icon">
+                                        <i class="fas fa-layer-group text-gaming-accent"></i>
+                                        <div class="feature-icon-glow"></div>
+                                    </div>
+                                </div>
+                                <p class="text-gray-300 mb-4">改变耐用性与外观风格，具备人体工学性能，提升使用舒适度。</p>
+                                <ul class="space-y-3">
+                                    <li class="flex items-center">
+                                        <span class="w-2 h-2 bg-gaming-accent rounded-full mr-2"></span>
+                                        <span class="text-gray-300">人位斜边/倒圆，放置手臂更舒适</span>
+                                    </li>
+                                    <li class="flex items-center">
+                                        <span class="w-2 h-2 bg-gaming-accent rounded-full mr-2"></span>
+                                        <span class="text-gray-300">桌角磨圆，防磕碰，更显精致</span>
+                                    </li>
+                                    <li class="flex items-center">
+                                        <span class="w-2 h-2 bg-gaming-accent rounded-full mr-2"></span>
+                                        <span class="text-gray-300">桌面材质多种选择，满足不同需求人群</span>
+                                    </li>
+                                </ul>
+                                <div class="mt-4 flex gap-3">
+                                    <span class="tag tag-easy">实施难度: 低</span>
+                                    <span class="tag tag-medium">客户吸引力: 中</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 无线充电模块卡片 -->
+                    <div class="cyber-card" data-aos="fade-up" data-aos-delay="400">
+                        <div class="flex items-start p-6">
+                            <div class="flex-grow">
+                                <h3 class="text-xl font-semibold mb-4 text-gaming-primary">无线充电模块</h3>
+                                <div class="feature-icon-wrapper">
+                                    <div class="feature-icon">
+                                        <i class="fas fa-charging-station text-gaming-accent"></i>
+                                        <div class="feature-icon-glow"></div>
+                                    </div>
+                                </div>
+                                <p class="text-gray-300 mb-4">便捷的充电解决方案，减少桌面线缆，提升整体使用体验。</p>
+                                <ul class="space-y-3">
+                                    <li class="flex items-center">
+                                        <span class="w-2 h-2 bg-gaming-accent rounded-full mr-2"></span>
+                                        <span class="text-gray-300">内置15W快充无线充电区域，支持主流手机充电标准</span>
+                                    </li>
+                                    <li class="flex items-center">
+                                        <span class="w-2 h-2 bg-gaming-accent rounded-full mr-2"></span>
+                                        <span class="text-gray-300">可选多区域充电设计，同时满足多设备充电需求</span>
+                                    </li>
+                                    <li class="flex items-center">
+                                        <span class="w-2 h-2 bg-gaming-accent rounded-full mr-2"></span>
+                                        <span class="text-gray-300">智能充电指示系统，直观显示充电状态</span>
+                                    </li>
+                                </ul>
+                                <div class="mt-4 flex gap-3">
+                                    <span class="tag tag-medium">实施难度: 中</span>
+                                    <span class="tag tag-medium">客户吸引力: 中</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 经济效益分析 -->
+            <section id="roi" class="mb-24" data-aos="fade-up">
+                <h2 class="section-title neon-text relative">经济效益预估</h2>
+                
+                <div class="cyber-card p-6" data-aos="fade-up">
+                    <div class="feature-card-animation"></div>
+                    <div class="feature-card-content">
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="border-b border-gaming-primary/30">
+                                        <th class="py-4 px-2 text-left text-gaming-primary">功能方案</th>
+                                        <th class="py-4 px-2 text-center text-gaming-primary">成本增加</th>
+                                        <th class="py-4 px-2 text-center text-gaming-primary">建设售价增加</th>
+                                        <th class="py-4 px-2 text-center text-gaming-primary">预计ROI</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="border-b border-gaming-primary/10 hover:bg-gaming-primary/5 transition-colors">
+                                        <td class="py-4 px-2 text-gray-300">线缆管理系统</td>
+                                        <td class="py-4 px-2 text-center text-gaming-accent">$12-15</td>
+                                        <td class="py-4 px-2 text-center text-gaming-primary">$30-40</td>
+                                        <td class="py-4 px-2 text-center text-gaming-secondary">150%</td>
+                                    </tr>
+                                    <tr class="border-b border-gaming-primary/10 hover:bg-gaming-primary/5 transition-colors">
+                                        <td class="py-4 px-2 text-gray-300">桌面材质及边缘优化</td>
+                                        <td class="py-4 px-2 text-center text-gaming-accent">$8-10</td>
+                                        <td class="py-4 px-2 text-center text-gaming-primary">$20-25</td>
+                                        <td class="py-4 px-2 text-center text-gaming-secondary">130%</td>
+                                    </tr>
+                                    <tr class="border-b border-gaming-primary/10 hover:bg-gaming-primary/5 transition-colors">
+                                        <td class="py-4 px-2 text-gray-300">升级RGB灯带</td>
+                                        <td class="py-4 px-2 text-center text-gaming-accent">$15-20</td>
+                                        <td class="py-4 px-2 text-center text-gaming-primary">$35-45</td>
+                                        <td class="py-4 px-2 text-center text-gaming-secondary">140%</td>
+                                    </tr>
+                                    <tr class="border-b border-gaming-primary/10 hover:bg-gaming-primary/5 transition-colors">
+                                        <td class="py-4 px-2 text-gray-300">无线充电模块</td>
+                                        <td class="py-4 px-2 text-center text-gaming-accent">$18-22</td>
+                                        <td class="py-4 px-2 text-center text-gaming-primary">$35-40</td>
+                                        <td class="py-4 px-2 text-center text-gaming-secondary">110%</td>
+                                    </tr>
+                                    <tr class="border-b border-gaming-primary/10 hover:bg-gaming-primary/5 transition-colors bg-gaming-dark/50">
+                                        <td class="py-4 px-2 text-gaming-secondary font-semibold">高端组合套件</td>
+                                        <td class="py-4 px-2 text-center text-gaming-accent">$45-55</td>
+                                        <td class="py-4 px-2 text-center text-gaming-primary">$120-150</td>
+                                        <td class="py-4 px-2 text-center text-gaming-secondary">170%</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </section>
+
+        <footer class="footer-section">
+            <div class="flex justify-center items-center space-x-4">
+                <p class="text-sm text-gaming-primary/60">© 2025 Besiter PBU团队 | 内部资料，请勿外传</p>
+                <div class="flex space-x-4 items-center">
+                    <a href="mailto:chaoswang@bestier.net" class="text-gaming-primary hover:text-gaming-primary/80" title="邮箱"><i class="far fa-envelope"></i></a>
+                </div>
+            </div>
+            <div class="text-center mt-2">
+                <span class="cosmic-text">Made By Chaos</span>
+            </div>
+        </footer>
+    </main>
+
+    <!-- 移动端导航菜单 -->
+    <div id="mobile-menu" class="fixed top-0 left-0 w-full h-full bg-gaming-darker/95 z-50 transform -translate-x-full transition-transform duration-300 flex items-center justify-center">
+        <button id="close-menu-btn" class="absolute top-6 right-6 text-gaming-primary text-2xl p-3 bg-gaming-dark/50 rounded-full border border-gaming-primary/50 hover:bg-gaming-primary/20 transition-all">
+            <i class="fas fa-times"></i>
+        </button>
+        <div class="flex flex-col space-y-6 items-center">
+            <a href="#intro" class="text-xl font-future text-gaming-primary hover:text-white transition-colors">引言</a>
+            <a href="#market" class="text-xl font-future text-gaming-primary hover:text-white transition-colors">市场调研</a>
+            <a href="#needs" class="text-xl font-future text-gaming-primary hover:text-white transition-colors">需求分层</a>
+            <a href="#features" class="text-xl font-future text-gaming-primary hover:text-white transition-colors">功能探索</a>
+            <a href="#roi" class="text-xl font-future text-gaming-primary hover:text-white transition-colors">经济效益</a>
+        </div>
+    </div>
+
+    <script>
+        // 原有的其他脚本
+        AOS.init({
+            duration: 1000,
+            easing: 'ease-in-out',
+            once: true
+        });
+
+        // 移动端菜单功能
+        document.getElementById('mobile-menu-btn').addEventListener('click', function() {
+            document.getElementById('mobile-menu').classList.remove('-translate-x-full');
+        });
+
+        document.getElementById('close-menu-btn').addEventListener('click', function() {
+            document.getElementById('mobile-menu').classList.add('-translate-x-full');
+        });
+
+        // 点击菜单项后关闭菜单
+        document.querySelectorAll('#mobile-menu a').forEach(link => {
+            link.addEventListener('click', function() {
+                document.getElementById('mobile-menu').classList.add('-translate-x-full');
+            });
+        });
+
+        // 滚动监听，添加固定导航栏
+        const nav = document.getElementById('main-nav');
+        
+        function updateNav() {
+            const currentScrollY = window.scrollY;
+            
+            // 只处理背景透明度
+            if (currentScrollY > 50) {
+                nav.classList.remove('nav-transparent');
+            } else {
+                nav.classList.add('nav-transparent');
+            }
+        }
+        
+        // 使用 requestAnimationFrame 优化滚动性能
+        let ticking = false;
+        
+        window.addEventListener('scroll', () => {
+            if (!ticking) {
+                window.requestAnimationFrame(() => {
+                    updateNav();
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        });
+        
+        // 初始化导航栏状态
+        updateNav();
+
+        // 鼠标移动追踪效果
+        document.addEventListener('mousemove', function(e) {
+            document.querySelectorAll('.feature-card').forEach(card => {
+                const rect = card.getBoundingClientRect();
+                const x = ((e.clientX - rect.left) / rect.width) * 100;
+                const y = ((e.clientY - rect.top) / rect.height) * 100;
+                card.style.setProperty('--mouse-x', `${x}%`);
+                card.style.setProperty('--mouse-y', `${y}%`);
+            });
+        });
+    </script>
+</body>
+</html>
